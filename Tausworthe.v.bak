@@ -1,0 +1,79 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: JaviMan and Mamita
+// 
+// Create Date:    10:23:56 03/22/2010 
+// Design Name: Uniform Random Noise Generator Design.
+// Module Name:    Tausworthe V.1
+// Project Name: MIMO emulator channel
+// Target Devices: 
+// Tool versions: 
+// Description: 
+//
+// Dependencies: 
+//
+// Revision: 
+// Revision 0.01 - File Created
+// Additional Comments: 
+//
+//////////////////////////////////////////////////////////////////////////////////
+module Tausworthe #(parameter N = 16)(
+    input wire clk_in,
+	 input wire reset_in,
+    input wire en_in,
+	 output wire send,
+    output wire [N-1:0] urng_out
+);
+
+////Iniciar semillas
+reg [31:0] s0, s1, s2;
+reg [31:0] urng_out_r;
+reg [3:0] counter;
+reg done;
+//initial
+//begin
+//s0=32'h00FFFFFF;
+//s1=32'h00CCCCCC;
+//s2=32'h00FF00FF;
+//end
+
+//Declaracion de constantes del metodo
+reg [31:0] c0, c1, c2;
+	
+	always @ (posedge clk_in or negedge reset_in) 
+begin
+    if (!reset_in) begin
+        s0 <= 32'h00FFFFFF;
+        s1 <= 32'h00CCCCCC;
+        s2 <= 32'h00FF00FF;
+        c0 <= 32'hFFFFFFFE;
+        c1 <= 32'hFFFFFFF8;
+        c2 <= 32'hFFFFFFF0;
+        urng_out_r <= 32'h00000000;
+        done <= 1'b0;
+        counter <= 4'b0; // Initialize counter
+    end
+    else if (en_in) begin
+        if (counter == 4'b0101) begin // Check if N cycles have passed
+            s0 <= ((s0 & c0) << 12) ^ (((s0 << 13) ^ s0) >> 19);
+            s1 <= ((s1 & c1) << 4) ^ (((s1 << 2) ^ s1) >> 25);
+            s2 <= ((s2 & c2) << 17) ^ (((s2 << 3) ^ s2) >> 11);
+            urng_out_r <= s0 ^ s1 ^ s2;
+            done <= 1'b1; // Set done signal to indicate the random number is ready
+				counter <= 4'b0;
+        end else begin
+            done <= 1'b0;
+            counter <= counter + 1'b1; // Increment counter if N cycles have not passed
+        end
+    end else begin
+        urng_out_r <= 32'h000000;
+        done <= 1'b0;
+        counter <= 4'b0; // Reset counter if not enabled
+    end
+end
+
+	assign urng_out = urng_out_r[N-1:0];
+	assign send = done;
+	
+endmodule

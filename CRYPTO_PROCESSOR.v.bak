@@ -1,0 +1,8 @@
+module CRYPTO_PROCESSOR(
+	input wire a,
+	output wire b
+);
+
+assign b = a;
+
+endmodule

@@ -1,0 +1,27 @@
+module Crypto_Module #(parameter N = 16) (
+	input wire clk, rst, en,
+	input wire [N-1:0] plain_text,
+	output wire [N-1:0] cipher_text
+);
+
+	wire [N-1:0] seed;
+	wire send;
+
+	scrambler scram(
+		.clk(clk),
+		.rst(rst),
+		.en(send),
+		.data_in(plain_text),
+		.seed(seed),
+		.data_out(cipher_text)
+	);
+	
+	Tausworthe taus(
+		.clk_in(clk),
+		.reset_in(rst),
+		.en_in(en),
+		.send(send),
+		.urng_out(seed)
+	);
+	
+endmodule
